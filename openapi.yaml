@@ -1,0 +1,93 @@
+openapi: 3.0.0
+info:
+  title: Reto Técnico Rimac - API Appointments
+  version: 1.0.0
+  description: |
+    API que permite gestionar citas médicas. Soporta la creación de citas y su posterior consulta por ID de asegurado.
+  contact:
+    name: Víctor Hugo Bravo
+    url: https://github.com/codeAssassins23
+    email: bravovictorhugo11@gmail.com
+
+servers:
+  - url: https://9om0ddjyj1.execute-api.us-east-1.amazonaws.com
+    description: Entorno de desarrollo
+
+tags:
+  - name: Appointments
+    description: Operaciones relacionadas con las citas médicas
+
+paths:
+  /appointments:
+    post:
+      summary: Crear una cita médica
+      tags:
+        - Appointments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Appointment"
+            example:
+              appointmentId: "123"
+              insuredId: "00001"
+              scheduleId: 200
+              countryISO: "PE"
+      responses:
+        "202":
+          description: Cita creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppointmentResponse"
+
+  /appointments/{insuredId}:
+    get:
+      summary: Obtener citas por asegurado
+      tags:
+        - Appointments
+      parameters:
+        - in: path
+          name: insuredId
+          required: true
+          schema:
+            type: string
+          description: ID del asegurado
+      responses:
+        "200":
+          description: Lista de citas encontradas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AppointmentResponse"
+
+components:
+  schemas:
+    Appointment:
+      type: object
+      properties:
+        appointmentId:
+          type: string
+        insuredId:
+          type: string
+        scheduleId:
+          type: integer
+        countryISO:
+          type: string
+          enum: [PE, CL]
+      required: [appointmentId, insuredId, scheduleId, countryISO]
+
+    AppointmentResponse:
+      type: object
+      properties:
+        appointmentId:
+          type: string
+        insuredId:
+          type: string
+        scheduleId:
+          type: integer
+        countryISO:
+          type: string
