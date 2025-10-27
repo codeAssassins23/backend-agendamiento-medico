@@ -1,0 +1,107 @@
+service: reto-tecnico
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: us-east-1
+  environment:
+    TABLE_NAME: ${env:TABLE_NAME}
+    TOPIC_ARN: ${env:TOPIC_ARN}
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
+
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:Query
+          Resource:
+            - arn:aws:dynamodb:us-east-1:${env:AWS_ACCOUNT_ID}:table/${env:TABLE_NAME}
+            - arn:aws:dynamodb:us-east-1:${env:AWS_ACCOUNT_ID}:table/${env:TABLE_NAME}/index/*
+
+        - Effect: Allow
+          Action: sns:Publish
+          Resource: ${env:TOPIC_ARN}
+
+        - Effect: Allow
+          Action:
+            - sqs:ReceiveMessage
+            - sqs:DeleteMessage
+            - sqs:GetQueueAttributes
+            - sqs:GetQueueUrl
+          Resource:
+            - arn:aws:sqs:us-east-1:${env:AWS_ACCOUNT_ID}:reto-tecnico-dev-pe
+            - arn:aws:sqs:us-east-1:${env:AWS_ACCOUNT_ID}:reto-tecnico-dev-cl
+            - arn:aws:sqs:us-east-1:${env:AWS_ACCOUNT_ID}:reto-tecnico-dev-status
+
+        - Effect: Allow
+          Action: events:PutEvents
+          Resource: "*"
+
+plugins:
+  - serverless-offline
+
+build:
+  esbuild: true
+
+functions:
+  createAppointment:
+    handler: src/functions/appointments/createAppointment.handler
+    events:
+      - httpApi:
+          method: POST
+          path: /appointments
+
+  getAppointmentsByInsured:
+    handler: src/functions/appointments/getByInsuredAppointments.handler
+    events:
+      - httpApi:
+          method: GET
+          path: /appointments/{insuredId}
+
+  appointmentConsumerPE:
+    handler: src/functions/consumers/appointment_pe.handler
+    timeout: 60
+    environment:
+      MYSQL_HOST_PE: ${env:MYSQL_HOST_PE}
+      MYSQL_DB_PE: ${env:MYSQL_DB_PE}
+      MYSQL_USER_PE: ${env:MYSQL_USER_PE}
+      MYSQL_PASSWORD_PE: ${env:MYSQL_PASSWORD_PE}
+    vpc:
+      securityGroupIds:
+        - ${env:SG_PE}
+      subnetIds:
+        - ${env:SUBNET_1}
+        - ${env:SUBNET_2}
+        - ${env:SUBNET_3}
+    events:
+      - sqs:
+          arn: arn:aws:sqs:us-east-1:${env:AWS_ACCOUNT_ID}:reto-tecnico-dev-pe
+
+  appointmentConsumerCL:
+    handler: src/functions/consumers/appointment_cl.handler
+    timeout: 60
+    environment:
+      MYSQL_HOST_CL: ${env:MYSQL_HOST_CL}
+      MYSQL_DB_CL: ${env:MYSQL_DB_CL}
+      MYSQL_USER_CL: ${env:MYSQL_USER_CL}
+      MYSQL_PASSWORD_CL: ${env:MYSQL_PASSWORD_CL}
+    vpc:
+      securityGroupIds:
+        - ${env:SG_CL}
+      subnetIds:
+        - ${env:SUBNET_1}
+        - ${env:SUBNET_2}
+        - ${env:SUBNET_3}
+    events:
+      - sqs:
+          arn: arn:aws:sqs:us-east-1:${env:AWS_ACCOUNT_ID}:reto-tecnico-dev-cl
+
+  statusConsumer:
+    handler: src/functions/status/onMessage.handler
+    events:
+      - sqs:
+          arn: arn:aws:sqs:us-east-1:${env:AWS_ACCOUNT_ID}:reto-tecnico-dev-status

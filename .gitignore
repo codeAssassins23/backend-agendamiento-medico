@@ -1,0 +1,7 @@
+node_modules
+.esbuild/
+undefined/
+temp/
+.tsx-cache/
+.serverless
+.env
