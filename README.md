@@ -1,4 +1,7 @@
 # Sistema de Agendamiento de Citas Médicas
+![AWS](https://img.shields.io/badge/AWS-Serverless-orange)
+![Node.js](https://img.shields.io/badge/Node.js-20.x-green)
+![TypeScript](https://img.shields.io/badge/TypeScript-✓-blue)
 
 Este proyecto implementa un **backend serverless en AWS** para gestionar el **agendamiento de citas médicas** en dos países: **Perú (PE)** y **Chile (CL)**.
 
@@ -182,6 +185,11 @@ npm run deploy
 ### Despliegue
 
 Este proyecto fue desplegado con **Serverless Framework** sobre **AWS Lambda**, utilizando servicios nativos como **API Gateway, SNS, SQS, DynamoDB y RDS MySQL**.
+
+---
+### 📜 Uso y atribución
+Este proyecto fue desarrollado por **Víctor Hugo Bravo García** con fines educativos y de demostración de arquitectura serverless en AWS.  
+Puedes usarlo como referencia, siempre citando la fuente.  
 
 ## Documentación SwaggerHub
 
